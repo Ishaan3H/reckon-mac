@@ -128,7 +128,8 @@ struct CommitmentsPage: View {
                 onClose: { saved in
                     model.newDraft = nil
                     if !saved { model.selectedID = nil }
-                }
+                },
+                newDraftIsCommitted: { model.newDraft?.isCommitted }
             )
             .id(id)   // a fresh editor (and fresh copy) for each selection
         } else {

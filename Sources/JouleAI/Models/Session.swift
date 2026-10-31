@@ -13,6 +13,7 @@ struct Session: Codable, Identifiable, Hashable {
         case didnt
         case skipped
         case brokeEarly
+        case interrupted   // JouleAI quit or crashed while it was running
     }
 
     var id: UUID = UUID()

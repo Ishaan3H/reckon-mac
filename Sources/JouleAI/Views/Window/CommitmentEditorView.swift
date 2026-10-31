@@ -15,6 +15,8 @@ struct CommitmentEditorView: View {
     let isNew: Bool
     /// Called when the editor is done: `true` after Save, `false` after Cancel or Delete.
     let onClose: (_ saved: Bool) -> Void
+    /// For an unsaved new commitment: what its circle in the list is set to.
+    var newDraftIsCommitted: () -> Bool? = { nil }
 
     /// Text typed into the "Add URL" field before pressing Add.
     @State private var urlText = ""
@@ -271,6 +273,9 @@ struct CommitmentEditorView: View {
                 if let saved = appState.commitment(withID: draft.id) {
                     draft.isCommitted = saved.isCommitted
                     draft.cancelledAt = saved.cancelledAt
+                    if saved.durationMinutes != draft.durationMinutes { draft.hasCustomLength = true }
+                } else if let committed = newDraftIsCommitted() {
+                    draft.isCommitted = committed
                 }
                 // A committed item whose new time clashes gets the same warning.
                 if draft.isCommitted,

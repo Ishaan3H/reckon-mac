@@ -99,6 +99,14 @@ final class SessionCoordinator {
     init(appState: AppState) {
         self.appState = appState
 
+        // Clean up after a quit or crash. Skipped if another copy of JouleAI is
+        // running, because then these may belong to it.
+        let copies = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
+        if copies.count <= 1 {
+            audio.restore()
+            appState.closeUnfinishedSessions()
+        }
+
         // One app-switch listener for the life of the app. Closing a window or
         // quitting an app can fire several switches in a row; they're debounced
         // so the burst is handled once.

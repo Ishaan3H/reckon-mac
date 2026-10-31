@@ -10,8 +10,13 @@ import Foundation
 @MainActor
 final class AudioMuter {
 
-    /// True while audio is muted because of JouleAI (not because of you).
-    private(set) var didMute = false
+    private static let didMuteKey = "didMuteAudio"
+
+    /// True while audio is muted because of JouleAI (not because of you). Saved,
+    /// so if JouleAI crashes while muting, the next launch can put the sound back.
+    private(set) var didMute = UserDefaults.standard.bool(forKey: didMuteKey) {
+        didSet { UserDefaults.standard.set(didMute, forKey: Self.didMuteKey) }
+    }
 
     /// Mutes output unless it's already muted. Safe to call more than once.
     func mute() {

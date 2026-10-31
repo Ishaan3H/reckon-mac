@@ -152,7 +152,7 @@ struct HistoryView: View {
     /// How a session is shown in history. "Kept" means you sat the whole
     /// session; Done / Partly / Didn't is how you said it went.
     private enum Outcome {
-        case done, partly, didnt, keptUnrated, skipped, broke, inProgress
+        case done, partly, didnt, keptUnrated, skipped, broke, interrupted, inProgress
 
         init(session: Session) {
             switch session.outcome {
@@ -161,6 +161,7 @@ struct HistoryView: View {
             case .didnt: self = .didnt
             case .skipped: self = .skipped
             case .brokeEarly: self = .broke
+            case .interrupted: self = .interrupted
             case nil: self = session.endedAt == nil ? .inProgress : .keptUnrated
             }
         }
@@ -175,6 +176,7 @@ struct HistoryView: View {
             case .keptUnrated: return "KEPT"
             case .skipped: return "SKIPPED"
             case .broke: return "BROKE EARLY"
+            case .interrupted: return "INTERRUPTED"
             case .inProgress: return "IN PROGRESS"
             }
         }
@@ -182,7 +184,7 @@ struct HistoryView: View {
         var color: Color {
             switch self {
             case .done, .keptUnrated: return Theme.accent
-            case .partly, .inProgress: return Theme.warning
+            case .partly, .inProgress, .interrupted: return Theme.warning
             case .didnt, .skipped: return Theme.textSecondary
             case .broke: return Theme.danger
             }

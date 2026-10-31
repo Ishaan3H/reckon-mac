@@ -31,6 +31,10 @@ struct Commitment: Codable, Identifiable, Hashable {
     /// What to open when you press Start (websites, files, apps).
     var launchTargets: [LaunchTarget] = []
 
+    /// True once you've chosen this commitment's session length yourself, so the
+    /// calendar event's length no longer replaces it. Optional so older saves load.
+    var hasCustomLength: Bool?
+
     /// Only committed items will take over the screen (from Phase 2).
     var isCommitted: Bool = false
 

@@ -21,6 +21,7 @@ struct JouleAIEvent: Codable {
         case started             // Start pressed
         case brokeOut            // ended early with the typed phrase
         case completed           // the timer ran out
+        case sessionInterrupted  // found at launch: JouleAI quit or crashed during this session
         case reflected           // answered the end-of-session window
         case reflectionSkipped   // closed it without answering
         case parkedToCommitment  // a parking-lot item became a new commitment

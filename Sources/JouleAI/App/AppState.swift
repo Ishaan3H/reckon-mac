@@ -44,6 +44,9 @@ final class AppState {
                 case .calendar:
                     // Only show calendar items whose event still exists today.
                     guard let identifier = item.calendarEventIdentifier else { return false }
+                    // No calendar access means we can't tell if the event still
+                    // exists, so trust what's saved: a commitment still fires.
+                    guard calendarAccess == .granted else { return true }
                     return todaysEventIdentifiers.contains(identifier)
                 }
             }
@@ -159,12 +162,20 @@ final class AppState {
                     commitments[index].startTime = calendarTime
                     changed = true
                 }
+                // The event's length wins too, unless you chose one yourself.
+                if !Self.hasCustomLength(commitments[index]),
+                   commitments[index].durationMinutes != Self.minutes(of: event) {
+                    commitments[index].durationMinutes = Self.minutes(of: event)
+                    changed = true
+                }
             } else {
                 let previous = commitments.last(where: { $0.calendarEventIdentifier == identifier })
-                commitments.append(Commitment(
+                // A length you chose for an earlier repeat carries over.
+                let keepsLength = previous.map(Self.hasCustomLength) ?? false
+                var commitment = Commitment(
                     title: title,
                     startTime: event.startDate,
-                    durationMinutes: previous?.durationMinutes ?? AppSettings.defaultDurationMinutes,
+                    durationMinutes: keepsLength ? previous!.durationMinutes : Self.minutes(of: event),
                     source: .calendar,
                     calendarEventIdentifier: identifier,
                     launchTargets: previous?.launchTargets ?? [],
@@ -172,7 +183,9 @@ final class AppState {
                     // that one shouldn't take over the screen the moment it appears.
                     isCommitted: event.startDate > Date(),
                     extraAllowedApps: previous?.extraAllowedApps ?? []
-                ))
+                )
+                commitment.hasCustomLength = keepsLength
+                commitments.append(commitment)
                 changed = true
             }
 
@@ -192,6 +205,19 @@ final class AppState {
             }
         }
         if changed { persist() }
+    }
+
+    /// A calendar event's length in minutes, within what a session can be.
+    private static func minutes(of event: EKEvent) -> Int {
+        let minutes = Int((event.endDate.timeIntervalSince(event.startDate) / 60).rounded())
+        guard minutes > 0 else { return AppSettings.defaultDurationMinutes }
+        return min(minutes, CommitmentEditorView.customRange.upperBound)
+    }
+
+    /// True if the session length was chosen by you rather than taken from the
+    /// calendar. Saves from before this existed count a non-default length as chosen.
+    private static func hasCustomLength(_ item: Commitment) -> Bool {
+        item.hasCustomLength ?? (item.durationMinutes != AppSettings.defaultDurationMinutes)
     }
 
     // MARK: - Editing commitments
@@ -372,6 +398,20 @@ final class AppState {
             sessions.append(session)
         }
         Storage.save(sessions, to: Self.sessionsFile)
+    }
+
+    /// At launch nothing can be running, so a session with no end was cut off
+    /// by a quit or crash. Closes each one at its planned end, or now if sooner.
+    func closeUnfinishedSessions(now: Date = Date()) {
+        for session in sessions where session.endedAt == nil {
+            let commitment = commitment(withID: session.commitmentId)
+            let planned = session.startedAt.addingTimeInterval(Double(commitment?.durationMinutes ?? 0) * 60)
+            var closed = session
+            closed.endedAt = min(planned, now)
+            closed.outcome = .interrupted
+            saveSession(closed)
+            if let commitment { EventLog.record(.sessionInterrupted, commitment) }
+        }
     }
 
     func session(withID id: Session.ID) -> Session? {

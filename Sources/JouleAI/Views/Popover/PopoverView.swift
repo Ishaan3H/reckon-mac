@@ -10,6 +10,8 @@ struct PopoverView: View {
 
     @Environment(AppState.self) private var appState
     @Environment(SessionCoordinator.self) private var coordinator
+    /// Closes the popover.
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NextUpView(model: model, actions: actions)
@@ -79,10 +81,13 @@ struct PopoverView: View {
 
     private var actions: PopoverActions {
         PopoverActions(
+            // Both close the popover first, so it can't sit on top of the window.
             openWindow: {
+                dismiss()
                 MainWindowController.shared.open(.commitments, appState: appState, coordinator: coordinator)
             },
             add: {
+                dismiss()
                 MainWindowController.shared.openEditor(for: appState.newManualCommitment(), isNew: true,
                                                        appState: appState, coordinator: coordinator)
             },

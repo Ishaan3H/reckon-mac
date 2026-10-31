@@ -53,13 +53,20 @@ final class MainWindowController {
                 .environment(model)
                 .environment(appState)
                 .environment(coordinator)
-            let window = NSWindow(contentViewController: NSHostingController(rootView: root))
+            let host = NSHostingController(rootView: root)
+            // The view draws under the title bar, so don't add the title bar's
+            // height to the window: that left an empty strip along the bottom.
+            host.safeAreaRegions = []
+            let window = NSWindow(contentViewController: host)
             // A clean window: no visible title bar, content runs to the top edge.
             window.styleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
             window.title = "JouleAI"
             window.isReleasedWhenClosed = false
+            // SwiftUI hasn't sized the window yet. Centring it now would centre an
+            // empty window, and it would then grow off the right of the screen.
+            window.setContentSize(host.view.fittingSize)
             window.center()
             self.window = window
         }

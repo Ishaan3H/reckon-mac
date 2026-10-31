@@ -99,7 +99,7 @@ Scheduler (every 30 s) ──▶ SessionCoordinator ──▶ AppState (data) �
 | `Popover/PopoverView.swift` | Connects the popover to live data and wires its buttons. Also brings back a skipped end-of-session window once. |
 | `Window/MainWindowView.swift` | The JouleAI window's tab bar and pages. |
 | `Window/CommitmentsPage.swift` | Commitments tab: today's list and the editor for the selected one. |
-| `Window/CommitmentEditorView.swift` | The editor: title, time, length (25 / 50 / custom minutes; calendar events always match the event), and launch targets. |
+| `Window/CommitmentEditorView.swift` | The editor: title, time, length (25 / 50 / custom minutes; calendar events default to the event's length), and launch targets. |
 | `Window/UnreadableBrowsersNote.swift` | The note explaining how Zen and Firefox pages are checked during a session. Used in the editor and Settings. |
 | `Window/HistoryPage.swift` | History tab: kept / skipped / broke-early counts for 14 days, and each session with its outcome and note. |
 | `Window/SettingsPage.swift` | Settings tab: browser, Focus shortcuts, brown noise, Your data (export, with the anonymise toggle), testing buttons, Quit. |

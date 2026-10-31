@@ -74,6 +74,9 @@ enum SnapshotRenderer {
         var draft = Commitment(title: "Write thesis intro", startTime: soon, durationMinutes: 50, source: .manual)
         draft.launchTargets = sampleTargets
 
+        var calendarDraft = Commitment(title: "Team planning call", startTime: soon, durationMinutes: 150, source: .calendar)
+        calendarDraft.calendarMinutes = 150
+
         func session(_ title: String, _ hoursAgo: Double, _ outcome: Session.Outcome?) -> Session {
             let start = now.addingTimeInterval(-hoursAgo * 3600)
             return Session(commitmentId: UUID(), commitmentTitle: title, startedAt: start,
@@ -121,6 +124,9 @@ enum SnapshotRenderer {
             ("window-editor", AnyView(CommitmentEditorView(draft: draft, isNew: false, onClose: { _ in })
                 .frame(width: 520, height: 1100).background(Theme.background)
                 .environment(AppState()))),   // the editor expects the app's data object
+            ("window-editor-calendar", AnyView(CommitmentEditorView(draft: calendarDraft, isNew: false, onClose: { _ in })
+                .frame(width: 520, height: 700).background(Theme.background)
+                .environment(AppState()))),
             ("window-history", AnyView(HistoryView(sessions: sessions)
                 .frame(width: 780, height: 580).background(Theme.background))),
             ("window-settings", AnyView(SettingsPage()

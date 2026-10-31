@@ -123,7 +123,8 @@ final class AppState {
     ///
     /// For each event today:
     /// - if we already have a commitment for that event today, update its title,
-    ///   time and length from the calendar (the calendar is always right about those);
+    ///   and time from the calendar (the calendar is always right about those), and
+    ///   its length too unless you picked your own;
     /// - otherwise create a new commitment for it. If the same event
     ///   appeared on an earlier day (a repeating event), copy its launch targets
     ///   so you don't have to set them up again.
@@ -151,14 +152,19 @@ final class AppState {
                     commitments[index].startTime = calendarTime
                     changed = true
                 }
-                // A calendar event's session is always as long as the event.
-                if commitments[index].durationMinutes != Self.minutes(of: event) {
-                    commitments[index].durationMinutes = Self.minutes(of: event)
+                // A session is as long as its event, unless you picked another length.
+                let eventMinutes = Self.minutes(of: event)
+                if commitments[index].calendarMinutes != eventMinutes {
+                    commitments[index].calendarMinutes = eventMinutes
+                    changed = true
+                }
+                if commitments[index].hasCustomLength != true, commitments[index].durationMinutes != eventMinutes {
+                    commitments[index].durationMinutes = eventMinutes
                     changed = true
                 }
             } else {
                 let previous = commitments.last(where: { $0.calendarEventIdentifier == identifier })
-                commitments.append(Commitment(
+                var commitment = Commitment(
                     title: title,
                     startTime: event.startDate,
                     durationMinutes: Self.minutes(of: event),
@@ -169,7 +175,9 @@ final class AppState {
                     // that one shouldn't take over the screen the moment it appears.
                     isCommitted: event.startDate > Date(),
                     extraAllowedApps: previous?.extraAllowedApps ?? []
-                ))
+                )
+                commitment.calendarMinutes = commitment.durationMinutes
+                commitments.append(commitment)
                 changed = true
             }
 

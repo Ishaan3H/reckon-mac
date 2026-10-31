@@ -53,7 +53,7 @@ struct CommitmentEditorView: View {
         .onAppear {
             // Opening a commitment that already has a non-preset length?
             // Start with "Custom" selected and its number filled in.
-            isCustomLength = ![25, 50].contains(draft.durationMinutes)
+            isCustomLength = !followsEvent && ![25, 50].contains(draft.durationMinutes)
             customMinutesText = String(draft.durationMinutes)
         }
     }
@@ -87,41 +87,42 @@ struct CommitmentEditorView: View {
         }
     }
 
-    @ViewBuilder
-    private var lengthSection: some View {
-        if isCalendar {
-            // Always as long as the event: change it in your calendar.
-            VStack(alignment: .leading, spacing: Theme.Space.s) {
-                SectionLabel("Session length")
-                Text("\(lengthText) · same as your calendar event")
-                    .font(Theme.Font.body)
-                    .foregroundStyle(Theme.text)
-            }
-        } else {
-            lengthPicker
-        }
-    }
+    /// True while a calendar event's session simply follows the event's length.
+    private var followsEvent: Bool { isCalendar && draft.hasCustomLength != true }
 
     /// e.g. "45 min", "2 hr" or "2 hr 30 min".
-    private var lengthText: String {
-        let hours = draft.durationMinutes / 60, minutes = draft.durationMinutes % 60
+    private func lengthText(_ total: Int) -> String {
+        let hours = total / 60, minutes = total % 60
         if hours == 0 { return "\(minutes) min" }
         return minutes == 0 ? "\(hours) hr" : "\(hours) hr \(minutes) min"
     }
 
-    private var lengthPicker: some View {
+    /// The choices: "Custom" is value 0, and a calendar event's own length is -1.
+    private var lengthOptions: [(label: String, value: Int)] {
+        let event = isCalendar
+            ? [(label: "Same as event (\(lengthText(draft.calendarMinutes ?? draft.durationMinutes)))", value: -1)]
+            : []
+        return event + [(label: "25 min", value: 25), (label: "50 min", value: 50), (label: "Custom", value: 0)]
+    }
+
+    private var lengthSection: some View {
         VStack(alignment: .leading, spacing: Theme.Space.m) {
             SectionLabel("Session length")
-            // Two presets plus "Custom" (value 0).
-            ChipPicker(options: [("25 min", 25), ("50 min", 50), ("Custom", 0)],
-                       selection: Binding(
-                get: { isCustomLength ? 0 : draft.durationMinutes },
+            ChipPicker(options: lengthOptions, selection: Binding(
+                get: { followsEvent ? -1 : (isCustomLength ? 0 : draft.durationMinutes) },
                 set: { newValue in
-                    if newValue == 0 {
-                        isCustomLength = true
-                        customMinutesText = String(draft.durationMinutes)
-                    } else {
+                    switch newValue {
+                    case -1:
                         isCustomLength = false
+                        draft.hasCustomLength = false
+                        draft.durationMinutes = draft.calendarMinutes ?? draft.durationMinutes
+                    case 0:
+                        isCustomLength = true
+                        draft.hasCustomLength = true
+                        customMinutesText = String(draft.durationMinutes)
+                    default:
+                        isCustomLength = false
+                        draft.hasCustomLength = true
                         draft.durationMinutes = newValue
                     }
                 }

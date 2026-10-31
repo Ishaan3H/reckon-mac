@@ -1,4 +1,17 @@
 import SwiftUI
+import UniformTypeIdentifiers
+
+/// Opens the log in the Mac's default text editor. macOS has no app registered
+/// for ".jsonl" files, so asking it to just open the file gets an error dialog.
+@MainActor
+private func openActivityLog() {
+    let log = Storage.directory.appendingPathComponent(EventLog.fileName)
+    guard let editor = NSWorkspace.shared.urlForApplication(toOpen: .plainText) else {
+        NSWorkspace.shared.activateFileViewerSelecting([log])
+        return
+    }
+    NSWorkspace.shared.open([log], withApplicationAt: editor, configuration: NSWorkspace.OpenConfiguration())
+}
 
 /// The History tab, connected to live data.
 struct HistoryPage: View {
@@ -39,7 +52,7 @@ struct HistoryView: View {
                 }
 
                 Button {
-                    NSWorkspace.shared.open(Storage.directory.appendingPathComponent(EventLog.fileName))
+                    openActivityLog()
                 } label: {
                     Label("Open activity log", systemImage: "list.bullet.rectangle")
                 }

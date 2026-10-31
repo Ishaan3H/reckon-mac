@@ -31,15 +31,10 @@ struct Commitment: Codable, Identifiable, Hashable {
     /// What to open when you press Start (websites, files, apps).
     var launchTargets: [LaunchTarget] = []
 
-    /// True once you've chosen this commitment's session length yourself, so the
-    /// calendar event's length no longer replaces it. Optional so older saves load.
-    var hasCustomLength: Bool?
-
     /// Only committed items will take over the screen (from Phase 2).
     var isCommitted: Bool = false
 
-    /// Bundle IDs of extra apps allowed during this commitment's session lock
-    /// (older field; new rules go in `allowRules`).
+    /// No longer used (see `allowRules`). Kept so older saves keep this data.
     var extraAllowedApps: [String] = []
 
     /// A Google Meet / Zoom / Teams link found in the calendar event's URL,
@@ -47,10 +42,9 @@ struct Commitment: Codable, Identifiable, Hashable {
     /// meeting site, skips brown noise and turns sound on.
     var meetingLink: String?
 
-    /// A saved allowlist preset this commitment uses (e.g. "Coding"), if any.
+    /// No longer used: sessions now allow only what opens on Start. Kept so
+    /// older saves keep this data.
     var presetID: UUID?
-    /// Apps and website rules allowed during this commitment's sessions,
-    /// on top of its launch targets and preset. Optional so older saves load.
     var allowRules: [AllowRule]?
 
     // MARK: Lead-up state

@@ -40,7 +40,6 @@ struct SettingsPage: View {
             VStack(alignment: .leading, spacing: Theme.Space.xxl) {
                 Text("Settings").font(Theme.Font.title).foregroundStyle(Theme.text)
                 browserSection
-                PresetsSection()
                 focusSection
                 parkingLotSection
                 noiseSection

@@ -392,9 +392,7 @@ final class SessionCoordinator {
             commitment: commitment,
             session: session,
             endsAt: now.addingTimeInterval(TimeInterval(commitment.durationMinutes * 60)),
-            allowlist: SessionAllowlist(commitment: commitment,
-                                        preset: appState.preset(withID: commitment.presetID),
-                                        meeting: meeting),
+            allowlist: SessionAllowlist(commitment: commitment, meeting: meeting),
             isTest: isTest
         )
         tabCheckPausedUntil = now.addingTimeInterval(5)

@@ -94,7 +94,6 @@ enum Launcher {
                 add(bundleID(ofAppAt: NSWorkspace.shared.urlForApplication(toOpen: fileURL)))
             }
         }
-        commitment.extraAllowedApps.forEach { add($0) }
         return result
     }
 

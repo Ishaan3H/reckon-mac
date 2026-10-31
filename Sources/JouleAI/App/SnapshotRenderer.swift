@@ -73,8 +73,6 @@ enum SnapshotRenderer {
         ]
         var draft = Commitment(title: "Write thesis intro", startTime: soon, durationMinutes: 50, source: .manual)
         draft.launchTargets = sampleTargets
-        draft.allowRules = ["youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr", "youtube.com", "desmos.com"]
-            .compactMap(AllowRule.site(from:))
 
         func session(_ title: String, _ hoursAgo: Double, _ outcome: Session.Outcome?) -> Session {
             let start = now.addingTimeInterval(-hoursAgo * 3600)

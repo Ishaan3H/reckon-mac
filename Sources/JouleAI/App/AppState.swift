@@ -20,9 +20,6 @@ final class AppState {
     /// Every session ever logged (started, skipped, broken...). Newest last.
     private(set) var sessions: [Session] = []
 
-    /// Saved allowlist presets ("Maths study", "Coding"...), edited in Settings.
-    private(set) var presets: [AllowPreset] = []
-
     /// Current calendar permission.
     private(set) var calendarAccess: CalendarService.Access
 
@@ -58,7 +55,6 @@ final class AppState {
     private let calendarService = CalendarService()
     private static let commitmentsFile = "commitments.json"
     private static let sessionsFile = "sessions.json"
-    private static let presetsFile = "presets.json"
 
     // MARK: - Setup
 
@@ -66,13 +62,6 @@ final class AppState {
         calendarAccess = calendarService.access
         commitments = Storage.load([Commitment].self, from: Self.commitmentsFile) ?? []
         sessions = Storage.load([Session].self, from: Self.sessionsFile) ?? []
-        // First launch: start with two example presets so the feature isn't empty.
-        if let saved = Storage.load([AllowPreset].self, from: Self.presetsFile) {
-            presets = saved
-        } else {
-            presets = AllowPreset.starterPresets
-            Storage.save(presets, to: Self.presetsFile)
-        }
         refresh()
 
         // Re-read the calendar whenever it changes (an event added in Calendar.app,
@@ -133,8 +122,8 @@ final class AppState {
     /// Re-reads today's calendar events and merges them with saved commitment data.
     ///
     /// For each event today:
-    /// - if we already have a commitment for that event today, update its title
-    ///   and time from the calendar (the calendar is always right about those);
+    /// - if we already have a commitment for that event today, update its title,
+    ///   time and length from the calendar (the calendar is always right about those);
     /// - otherwise create a new commitment for it. If the same event
     ///   appeared on an earlier day (a repeating event), copy its launch targets
     ///   so you don't have to set them up again.
@@ -162,20 +151,17 @@ final class AppState {
                     commitments[index].startTime = calendarTime
                     changed = true
                 }
-                // The event's length wins too, unless you chose one yourself.
-                if !Self.hasCustomLength(commitments[index]),
-                   commitments[index].durationMinutes != Self.minutes(of: event) {
+                // A calendar event's session is always as long as the event.
+                if commitments[index].durationMinutes != Self.minutes(of: event) {
                     commitments[index].durationMinutes = Self.minutes(of: event)
                     changed = true
                 }
             } else {
                 let previous = commitments.last(where: { $0.calendarEventIdentifier == identifier })
-                // A length you chose for an earlier repeat carries over.
-                let keepsLength = previous.map(Self.hasCustomLength) ?? false
-                var commitment = Commitment(
+                commitments.append(Commitment(
                     title: title,
                     startTime: event.startDate,
-                    durationMinutes: keepsLength ? previous!.durationMinutes : Self.minutes(of: event),
+                    durationMinutes: Self.minutes(of: event),
                     source: .calendar,
                     calendarEventIdentifier: identifier,
                     launchTargets: previous?.launchTargets ?? [],
@@ -183,9 +169,7 @@ final class AppState {
                     // that one shouldn't take over the screen the moment it appears.
                     isCommitted: event.startDate > Date(),
                     extraAllowedApps: previous?.extraAllowedApps ?? []
-                )
-                commitment.hasCustomLength = keepsLength
-                commitments.append(commitment)
+                ))
                 changed = true
             }
 
@@ -212,12 +196,6 @@ final class AppState {
         let minutes = Int((event.endDate.timeIntervalSince(event.startDate) / 60).rounded())
         guard minutes > 0 else { return AppSettings.defaultDurationMinutes }
         return min(minutes, CommitmentEditorView.customRange.upperBound)
-    }
-
-    /// True if the session length was chosen by you rather than taken from the
-    /// calendar. Saves from before this existed count a non-default length as chosen.
-    private static func hasCustomLength(_ item: Commitment) -> Bool {
-        item.hasCustomLength ?? (item.durationMinutes != AppSettings.defaultDurationMinutes)
     }
 
     // MARK: - Editing commitments
@@ -331,29 +309,6 @@ final class AppState {
     /// Committed, not cancelled, and not already started/skipped.
     private func isLive(_ item: Commitment) -> Bool {
         item.isCommitted && !item.isCancelled && !hasSession(for: item.id)
-    }
-
-    // MARK: - Presets
-
-    func preset(withID id: UUID?) -> AllowPreset? {
-        guard let id else { return nil }
-        return presets.first { $0.id == id }
-    }
-
-    /// Adds or replaces a preset (matched by id) and saves.
-    func savePreset(_ preset: AllowPreset) {
-        if let index = presets.firstIndex(where: { $0.id == preset.id }) {
-            presets[index] = preset
-        } else {
-            presets.append(preset)
-        }
-        Storage.save(presets, to: Self.presetsFile)
-    }
-
-    /// Deletes a preset. Commitments that used it simply go back to "No preset".
-    func deletePreset(_ id: UUID) {
-        presets.removeAll { $0.id == id }
-        Storage.save(presets, to: Self.presetsFile)
     }
 
     // MARK: - Overlap warnings

@@ -54,7 +54,7 @@ Scheduler (every 30 s) ──▶ SessionCoordinator ──▶ AppState (data) �
 | `Commitment.swift` | Something you intend to do at a time: title, start, length, calendar or manual, launch targets, the Commit flag, plus lead-up state (heads-up shown and answered, reminder shown, rescheduled, cancelled). |
 | `LaunchTarget.swift` | One thing to open on Start: a URL, a file or an app. Also builds a readable label from what you picked. |
 | `Session.swift` | One time a commitment fired: when it started and ended, the outcome (done, partly, didn't, skipped, broke early), the "where I left off" note, the parking-lot notes, and whether the end window was skipped. |
-| `AllowRule.swift` | One allowed app or website rule (a domain, a path like a YouTube channel, or an exact playlist/video link), how a rule matches a web address, the soft warning for common distractions, and `AllowPreset` (a named, reusable set of rules, plus the two starter presets). |
+| `AllowRule.swift` | One allowed app or website rule (a domain, a path like a YouTube channel, or an exact playlist/video link), how a rule matches a web address. |
 | `JouleAIEvent.swift` | One line in the event log: what happened, to which commitment, when, and any detail. |
 
 ## `Services/`: one job each
@@ -76,7 +76,7 @@ Scheduler (every 30 s) ──▶ SessionCoordinator ──▶ AppState (data) �
 | `AudioMuter.swift` | Mutes sound when the Start card appears and restores it, but never unmutes sound you muted yourself. |
 | `Launcher.swift` | Opens launch targets (web links in the session browser), and works out which apps a session allows. |
 | `BrowserTabs.swift` | Reads the current tab and switches tabs in Safari, Chrome, Arc, Brave and Edge via AppleScript; knows which browsers (Firefox, Zen…) can't be read. |
-| `SessionAllowlist.swift` | Built when a session starts: combines launch targets, the commitment's preset and its own rules, then answers "may this app be in front?" and "may this tab be open?". |
+| `SessionAllowlist.swift` | Built when a session starts: what's allowed is what opens on Start, plus a calendar event's meeting link. The lock asks it whether an app or browser tab is allowed. |
 | `FocusShortcut.swift` | Runs a Shortcut by name with the `shortcuts` command (how Focus gets turned on and off): checks `shortcuts list` first and reports the exit code and error output. |
 | `BrownNoisePlayer.swift` | Generates brown noise in real time with AVAudioEngine. No audio file. |
 
@@ -99,9 +99,8 @@ Scheduler (every 30 s) ──▶ SessionCoordinator ──▶ AppState (data) �
 | `Popover/PopoverView.swift` | Connects the popover to live data and wires its buttons. Also brings back a skipped end-of-session window once. |
 | `Window/MainWindowView.swift` | The JouleAI window's tab bar and pages. |
 | `Window/CommitmentsPage.swift` | Commitments tab: today's list and the editor for the selected one. |
-| `Window/CommitmentEditorView.swift` | The editor: title, time, length (25 / 50 / custom minutes), launch targets, and what's allowed during the session (preset + extra rules). Warns about clashes on Save. |
-| `Window/AllowRulesEditor.swift` | The editable list of allowed apps and website rules (with distraction warnings), shared by the editor and Settings; also the note about Firefox-style browsers. |
-| `Window/PresetsSection.swift` | The "Allowlist presets" part of Settings: add, rename, edit, delete presets. |
+| `Window/CommitmentEditorView.swift` | The editor: title, time, length (25 / 50 / custom minutes; calendar events always match the event), and launch targets. |
+| `Window/UnreadableBrowsersNote.swift` | The note explaining how Zen and Firefox pages are checked during a session. Used in the editor and Settings. |
 | `Window/HistoryPage.swift` | History tab: kept / skipped / broke-early counts for 14 days, and each session with its outcome and note. |
 | `Window/SettingsPage.swift` | Settings tab: browser, Focus shortcuts, brown noise, Your data (export, with the anonymise toggle), testing buttons, Quit. |
 | `FocusShortcutHelp.swift` | The one-time "Focus didn't turn on" message with steps to create the shortcut, and the message when it fails to run. |
@@ -114,5 +113,5 @@ Scheduler (every 30 s) ──▶ SessionCoordinator ──▶ AppState (data) �
 `~/Library/Application Support/JouleAI/`
 - `commitments.json`: your commitments
 - `sessions.json`: every session and its outcome and note
-- `presets.json`: your allowlist presets
+- `presets.json`: allowlist presets from earlier versions (no longer used)
 - `events.jsonl`: the timestamped event log

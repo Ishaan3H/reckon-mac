@@ -2,10 +2,8 @@ import AppKit
 
 /// Everything a running session allows, worked out once when you press Start.
 ///
-/// It combines three sources:
-/// 1. **Launch targets**: the apps they open in, and their web links.
-/// 2. **The commitment's preset** (e.g. "Coding"), if it picked one.
-/// 3. **The commitment's own rules**, plus its older "extra allowed apps".
+/// What opens on Start is what's allowed: the launch targets' apps and web
+/// links, plus a calendar event's meeting link.
 ///
 /// The lock asks it two questions: "may this app be in front?" and "may this
 /// browser tab be open?".
@@ -15,7 +13,7 @@ struct SessionAllowlist {
     /// Allowed apps, most important first (launch-target apps lead, so
     /// "Back to task" returns to the app you started in).
     private(set) var apps: [String] = []
-    /// Website rules from the preset, the commitment, and narrowed launch links.
+    /// Website rules from the meeting link and narrowed launch links.
     private(set) var siteRules: [AllowRule] = []
     /// Launch-target links that allow their whole site (e.g. your Google Doc
     /// allows docs.google.com, so you can open its sibling docs and sign in).
@@ -32,7 +30,7 @@ struct SessionAllowlist {
         "youtube.com", "instagram.com", "x.com", "twitter.com", "reddit.com", "tiktok.com", "facebook.com",
     ]
 
-    init(commitment: Commitment, preset: AllowPreset?, meeting: MeetingLink? = nil) {
+    init(commitment: Commitment, meeting: MeetingLink? = nil) {
         func addApp(_ id: String?) {
             if let id, !apps.contains(id) { apps.append(id) }
         }
@@ -56,14 +54,6 @@ struct SessionAllowlist {
                 siteRules.append(exact)
             } else {
                 targetSites.append(link)
-            }
-        }
-
-        // 2 + 3. Preset and the commitment's own rules.
-        for rule in (preset?.rules ?? []) + (commitment.allowRules ?? []) {
-            switch rule.kind {
-            case .app: addApp(rule.value)
-            case .site: siteRules.append(rule)
             }
         }
     }

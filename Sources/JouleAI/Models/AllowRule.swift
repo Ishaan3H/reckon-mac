@@ -98,28 +98,3 @@ struct AllowRule: Codable, Identifiable, Hashable {
 
     var symbolName: String { kind == .app ? "app" : "globe" }
 }
-
-/// A named, reusable allowlist, e.g. "Maths study" or "Coding".
-/// Edited in Settings; a commitment can pick one.
-struct AllowPreset: Codable, Identifiable, Hashable {
-    var id = UUID()
-    var name: String
-    var rules: [AllowRule] = []
-
-    /// The two examples created on first launch, so the feature isn't empty.
-    static var starterPresets: [AllowPreset] {
-        func site(_ s: String) -> AllowRule { AllowRule.site(from: s)! }
-        func app(_ id: String, _ name: String) -> AllowRule { AllowRule(kind: .app, value: id, label: name) }
-        return [
-            AllowPreset(name: "Maths study", rules: [
-                site("khanacademy.org"), site("desmos.com"), site("wolframalpha.com"),
-                app("com.apple.Preview", "Preview"),
-            ]),
-            AllowPreset(name: "Coding", rules: [
-                site("github.com"), site("stackoverflow.com"), site("developer.apple.com"),
-                app("com.apple.dt.Xcode", "Xcode"), app("com.microsoft.VSCode", "Visual Studio Code"),
-                app("com.apple.Terminal", "Terminal"),
-            ]),
-        ]
-    }
-}

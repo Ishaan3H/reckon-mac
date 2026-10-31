@@ -293,14 +293,10 @@ final class AppState {
         }
     }
 
-    /// The next committed item starting within 20 minutes — what the menu bar
-    /// counts down to.
+    /// The next committed item still to start today — what the menu bar counts
+    /// down to.
     func upcoming(at now: Date = Date()) -> Commitment? {
-        todayItems.first { item in
-            isLive(item) &&
-            item.startTime.addingTimeInterval(-20 * 60) <= now &&
-            now < item.startTime
-        }
+        todayItems.first { isLive($0) && now < $0.startTime }
     }
 
     /// Committed, not cancelled, and not already started/skipped.

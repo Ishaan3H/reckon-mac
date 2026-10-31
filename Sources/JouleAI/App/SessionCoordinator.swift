@@ -3,9 +3,9 @@ import Observation
 
 /// Runs everything that happens around a commitment:
 ///
-/// 0. **Lead-up**: 20 minutes before, a heads-up notification and a menu bar
-///    countdown ("I'll be ready" / "Push 30 min" / "Not today"); 5 minutes
-///    before, a plain reminder. No blur, no mute.
+/// 0. **Lead-up**: the menu bar counts down from the moment you commit. 20
+///    minutes before, a heads-up notification ("I'll be ready" / "Push 30 min" /
+///    "Not today"); 5 minutes before, a plain reminder. No blur, no mute.
 /// 1. **Firing**: at start time → mute audio → show the Start card
 ///    (Start / Reschedule 30 min / Cancel).
 /// 2. **Starting**: open the launch targets, run the Focus shortcut, play brown
@@ -42,7 +42,7 @@ final class SessionCoordinator {
     /// True while the Settings "Preview" button is playing brown noise.
     private(set) var isPreviewingNoise = false
 
-    /// The next committed item starting within 20 minutes, if any.
+    /// The next committed item still to start today, if any.
     private(set) var upcoming: Commitment?
     /// Seconds until `upcoming` starts (updated every second).
     private(set) var secondsUntilStart = 0

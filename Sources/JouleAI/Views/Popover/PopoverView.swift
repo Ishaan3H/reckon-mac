@@ -40,7 +40,8 @@ struct PopoverView: View {
             $0.isCommitted && !$0.isCancelled && !appState.hasSession(for: $0.id) && $0.endTime > now
         }) {
             heroID = next.id
-            let isLeadUp = coordinator.upcoming?.id == next.id
+            // The last 20 minutes: exact countdown and the heads-up buttons.
+            let isLeadUp = coordinator.upcoming?.id == next.id && coordinator.secondsUntilStart <= 20 * 60
             hero = .next(.init(
                 id: next.id,
                 title: next.title,

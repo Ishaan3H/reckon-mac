@@ -81,9 +81,22 @@ final class AppState {
         center.addObserver(forName: .NSCalendarDayChanged, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.refresh() }
         }
+
+        // Left alone, macOS can take a while to fetch new Google events, so
+        // nudge it every 5 minutes for as long as the app runs.
+        Timer.scheduledTimer(withTimeInterval: 5 * 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.syncCalendar() }
+        }
     }
 
     // MARK: - Calendar
+
+    /// Asks macOS to fetch new calendar data. Any new events reach `refresh()`
+    /// through the EKEventStoreChanged observer above.
+    func syncCalendar() {
+        guard calendarAccess == .granted else { return }
+        calendarService.askForSync()
+    }
 
     /// Asks for calendar permission (shows the system prompt the first time).
     func requestCalendarAccess() {

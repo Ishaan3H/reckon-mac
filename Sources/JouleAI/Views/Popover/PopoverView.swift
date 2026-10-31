@@ -15,6 +15,7 @@ struct PopoverView: View {
             // Refresh every time the popover appears, so the list is never stale.
             .onAppear {
                 appState.refresh()
+                appState.syncCalendar()
                 // A skipped "Where did you leave off?" comes back once, here.
                 coordinator.offerPendingReflection()
             }

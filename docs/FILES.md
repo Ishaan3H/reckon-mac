@@ -64,7 +64,7 @@ Scheduler (every 30 s) ──▶ SessionCoordinator ──▶ AppState (data) �
 | `Storage.swift` | Reads and writes JSON files in `~/Library/Application Support/JouleAI/`. |
 | `AppSettings.swift` | Small saved preferences (session length, Focus shortcut names, brown noise, browser) and their defaults. |
 | `LegacyMigration.swift` | One-time move of data and settings from when the app was called Reckon. |
-| `CalendarService.swift` | The only file that talks to the Calendar (EventKit): asks permission and reads today's timed events. |
+| `CalendarService.swift` | The only file that talks to the Calendar (EventKit): asks permission, reads today's timed events, and reloads them for the refresh button. |
 | `WindowTitleReader.swift` | Reads the front window title of Firefox-based browsers (Zen, Firefox) through the Accessibility API, and asks for that permission. |
 | `GlobalHotKey.swift` | A system-wide shortcut (⌘⇧J for the parking lot) using macOS's hotkey API, which needs no Accessibility permission. |
 | `KeepAwake.swift` | Keeps the Mac from idle-sleeping during a session with an IOKit power assertion ("Joule focus session"), released on every way a session ends and when JouleAI quits. |

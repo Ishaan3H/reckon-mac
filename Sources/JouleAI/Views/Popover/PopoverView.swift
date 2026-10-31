@@ -63,7 +63,8 @@ struct PopoverView: View {
                                     isCommitted: $0.isCommitted, isCancelled: $0.isCancelled) }
 
         return PopoverModel(hero: hero, rows: rows,
-                            calendarConnected: appState.calendarAccess == .granted)
+                            calendarConnected: appState.calendarAccess == .granted,
+                            calendarRefreshing: appState.isReloadingCalendar)
     }
 
     // MARK: - Actions
@@ -95,6 +96,7 @@ struct PopoverView: View {
                     appState.openCalendarPrivacySettings()
                 }
             },
+            refreshCalendar: { appState.reloadCalendar() },
             openParkingLot: { coordinator.toggleParkingLot() }
         )
     }

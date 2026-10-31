@@ -39,6 +39,14 @@ final class CalendarService {
         return access
     }
 
+    /// Drops what this app has cached and asks macOS to check the calendar
+    /// accounts (Google, iCloud…) for new data. Anything that arrives later
+    /// triggers EKEventStoreChanged, which AppState already listens for.
+    func reload() {
+        store.reset()
+        store.refreshSourcesIfNecessary()
+    }
+
     /// Today's timed events (all-day events are skipped, since they have no
     /// meaningful start time), sorted by start time.
     func todaysEvents() -> [EKEvent] {

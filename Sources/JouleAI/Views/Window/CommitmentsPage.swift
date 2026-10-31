@@ -29,6 +29,10 @@ struct CommitmentsPage: View {
             HStack {
                 Text("Today").font(Theme.Font.title).foregroundStyle(Theme.text)
                 Spacer()
+                if appState.calendarAccess == .granted {
+                    CalendarRefreshButton(isRefreshing: appState.isReloadingCalendar,
+                                          action: appState.reloadCalendar)
+                }
                 Button {
                     let draft = appState.newManualCommitment()
                     model.newDraft = draft

@@ -26,6 +26,9 @@ final class AppState {
     /// Current calendar permission.
     private(set) var calendarAccess: CalendarService.Access
 
+    /// True for a moment after the refresh button is pressed, to show a spinner.
+    private(set) var isReloadingCalendar = false
+
     /// Identifiers of the calendar events that exist today, so we can hide saved
     /// commitments whose event was deleted or moved to another day.
     private var todaysEventIdentifiers: Set<String> = []
@@ -94,6 +97,21 @@ final class AppState {
     func openCalendarPrivacySettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars")!
         NSWorkspace.shared.open(url)
+    }
+
+    /// The refresh button: asks macOS to re-check the calendar accounts, then
+    /// reads today's events again. The second read picks up a quick sync; a
+    /// slower one still arrives through the EKEventStoreChanged observer above.
+    func reloadCalendar() {
+        guard !isReloadingCalendar else { return }
+        isReloadingCalendar = true
+        calendarService.reload()
+        refresh()
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            refresh()
+            isReloadingCalendar = false
+        }
     }
 
     /// Re-reads today's calendar events and merges them with saved commitment data.

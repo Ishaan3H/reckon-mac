@@ -42,6 +42,7 @@ struct PopoverModel {
     var hero: Hero
     var rows: [Row]
     var calendarConnected: Bool
+    var calendarRefreshing = false
 }
 
 /// What the popover's buttons do. The container fills these in.
@@ -53,6 +54,7 @@ struct PopoverActions {
     var push: (UUID) -> Void = { _ in }
     var notToday: (UUID) -> Void = { _ in }
     var connectCalendar: () -> Void = {}
+    var refreshCalendar: () -> Void = {}
     var openParkingLot: () -> Void = {}
 }
 
@@ -104,6 +106,10 @@ struct NextUpView: View {
                 .font(Theme.Font.detail.weight(.medium))
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
+            if model.calendarConnected {
+                CalendarRefreshButton(isRefreshing: model.calendarRefreshing,
+                                      action: actions.refreshCalendar)
+            }
             IconButton(systemName: "gearshape", help: "History, settings and launch targets",
                        action: actions.openWindow)
         }

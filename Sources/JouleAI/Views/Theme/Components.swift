@@ -84,6 +84,22 @@ struct IconButton: View {
     }
 }
 
+/// Reloads the calendar events. Shows a small spinner while it's working.
+struct CalendarRefreshButton: View {
+    let isRefreshing: Bool
+    let action: () -> Void
+
+    var body: some View {
+        if isRefreshing {
+            ProgressView()
+                .controlSize(.small)
+                .frame(width: 28, height: 28)
+        } else {
+            IconButton(systemName: "arrow.clockwise", help: "Reload calendar events", action: action)
+        }
+    }
+}
+
 // MARK: - Text
 
 /// Small uppercase label above a group, e.g. "LATER TODAY".

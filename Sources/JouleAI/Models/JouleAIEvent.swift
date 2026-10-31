@@ -15,6 +15,7 @@ struct JouleAIEvent: Codable {
         case respondedNotToday   // "Not today"
         case reminderShown       // 5-minute reminder appeared
         case overlayShown        // full-screen Start card appeared
+        case startCardHidden     // Start card was up but not visible on screen
         case rescheduled         // moved 30 minutes later
         case cancelled           // "Not today" or Cancel on the overlay
         case started             // Start pressed

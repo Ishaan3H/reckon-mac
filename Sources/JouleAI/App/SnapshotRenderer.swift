@@ -55,6 +55,12 @@ enum SnapshotRenderer {
                               durationMinutes: 50, countdown: nil, leftOffNote: note,
                               showHeadsUpActions: false, saidReady: false, canPush: true)),
             rows: rows, calendarConnected: true)
+        let overdue = PopoverModel(
+            hero: .next(.init(id: UUID(), title: "Write thesis intro", startTime: now.addingTimeInterval(-683),
+                              durationMinutes: 50, countdown: nil, leftOffNote: note,
+                              showHeadsUpActions: false, saidReady: false, canPush: true,
+                              hasStarted: true, canStartNow: true)),
+            rows: rows, calendarConnected: true)
         let inSession = PopoverModel(
             hero: .inSession(title: "Write thesis intro", endsAt: now.addingTimeInterval(23 * 60), remaining: "23:10"),
             rows: rows, calendarConnected: true)
@@ -89,6 +95,7 @@ enum SnapshotRenderer {
         return [
             ("popover-starting-soon", AnyView(NextUpView(model: startingSoon, actions: .init()))),
             ("popover-later-today", AnyView(NextUpView(model: laterToday, actions: .init()))),
+            ("popover-overdue", AnyView(NextUpView(model: overdue, actions: .init()))),
             ("popover-in-session", AnyView(NextUpView(model: inSession, actions: .init()))),
             ("popover-nothing-committed", AnyView(NextUpView(model: empty, actions: .init()))),
             ("overlay-start", AnyView(backdrop(StartCardView(

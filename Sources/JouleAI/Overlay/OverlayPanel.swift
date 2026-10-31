@@ -42,6 +42,7 @@ final class OverlayPanel: NSPanel {
         hasShadow = false
         isMovable = false
         hidesOnDeactivate = false      // stay visible even if another app gets focus
+        canHide = false                // survive another app's "Hide Others"
         isReleasedWhenClosed = false   // OverlayController manages the lifetime
         place(on: screen)
 

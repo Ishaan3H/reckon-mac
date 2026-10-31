@@ -71,6 +71,8 @@ final class SessionCoordinator {
     @ObservationIgnored private var emergencyHotKey: GlobalHotKey?
     /// ⌘⇧J, registered only while a session runs.
     @ObservationIgnored private var parkingLotHotKey: GlobalHotKey?
+    /// True once this Start card has been logged as not visible.
+    @ObservationIgnored private var loggedHiddenStartCard = false
     /// Waits a moment after typing stops before saving the parking lot.
     @ObservationIgnored private var parkedSaveTask: Task<Void, Never>?
     @ObservationIgnored private let notifier = Notifier()
@@ -140,6 +142,8 @@ final class SessionCoordinator {
     func tick() {
         appState.refresh()
         sendLeadUpNotifications()
+        closeExpiredStartCard()
+        keepStartCardOnScreen()
         checkForDueCommitment()
         updateUpcoming()
     }
@@ -266,8 +270,36 @@ final class SessionCoordinator {
              noteOverride: "This is where your note from last time will appear.")
     }
 
+    /// Nobody answered the Start card by the end of the commitment's slot:
+    /// close it (which also unmutes) and count the commitment as skipped.
+    private func closeExpiredStartCard() {
+        guard let firing = firingCommitment, Date() >= firing.endTime else { return }
+        if appState.commitment(withID: firing.id) != nil {
+            cancel(firing, from: "Start card, no answer by the end of its slot")
+        }
+        closeStartCard()
+    }
+
+    /// The Start card should be up but macOS says it can't be seen: log it once
+    /// and bring it back.
+    private func keepStartCardOnScreen() {
+        guard let firing = firingCommitment, !overlay.isOnScreen else { return }
+        if !loggedHiddenStartCard {
+            loggedHiddenStartCard = true
+            EventLog.record(.startCardHidden, firing, isTest: appState.commitment(withID: firing.id) == nil)
+        }
+        overlay.reassert(trigger: nil)
+    }
+
+    /// "Start" in the popover: the same as pressing Start on the Start card.
+    func startFiring(_ id: Commitment.ID) {
+        guard let firing = firingCommitment, firing.id == id else { return }
+        start(firing, isTest: false)
+    }
+
     private func fire(_ commitment: Commitment, isTest: Bool, noteOverride: String? = nil) {
         firingCommitment = commitment
+        loggedHiddenStartCard = false
         updateUpcoming()
         audio.mute()
         EventLog.record(.overlayShown, commitment, isTest: isTest)

@@ -39,6 +39,9 @@ final class OverlayController {
     private var keyScreenID: CGDirectDisplayID?
 
     private(set) var isVisible = false
+    /// True if macOS says the card's panel can actually be seen right now.
+    /// (`isVisible` only means we asked for it to be shown.)
+    var isOnScreen: Bool { keyPanel?.occlusionState.contains(.visible) ?? false }
     /// The presentation options in force before we hid the Dock / blocked Cmd+Tab.
     private var savedPresentationOptions: NSApplication.PresentationOptions?
 

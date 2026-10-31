@@ -229,7 +229,14 @@ final class AppState {
     /// replaced; otherwise the commitment is added.
     func save(_ commitment: Commitment) {
         if let index = commitments.firstIndex(where: { $0.id == commitment.id }) {
-            commitments[index] = commitment
+            var updated = commitment
+            // A new time gets its own heads-up and reminder.
+            if commitments[index].startTime != commitment.startTime {
+                updated.headsUpShownAt = nil
+                updated.headsUpResponse = nil
+                updated.reminderShownAt = nil
+            }
+            commitments[index] = updated
         } else {
             commitments.append(commitment)
         }
@@ -349,9 +356,12 @@ final class AppState {
         }
     }
 
-    /// True if any session has been logged for this exact commitment.
+    /// True if a session has been logged for this commitment's current time slot.
     func hasSession(for commitmentId: Commitment.ID) -> Bool {
-        sessions.contains { $0.commitmentId == commitmentId }
+        // A session that ended before the current start time belongs to an
+        // earlier slot: moving a finished commitment later makes it due again.
+        let start = commitment(withID: commitmentId)?.startTime ?? .distantPast
+        return sessions.contains { $0.commitmentId == commitmentId && ($0.endedAt ?? .distantFuture) > start }
     }
 
     /// Adds a session, or replaces it if one with the same `id` already exists

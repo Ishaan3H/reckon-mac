@@ -28,6 +28,10 @@ struct PopoverModel {
         let canPush: Bool
         /// e.g. "Google Meet" when the calendar event has a meeting link.
         var meetingService: String? = nil
+        /// Its start time has passed but it hasn't been started.
+        var hasStarted = false
+        /// The Start card is waiting for this one: offer Start here too.
+        var canStartNow = false
     }
 
     /// One of today's other items in the list below the hero.
@@ -53,6 +57,7 @@ struct PopoverActions {
     var ready: (UUID) -> Void = { _ in }
     var push: (UUID) -> Void = { _ in }
     var notToday: (UUID) -> Void = { _ in }
+    var startNow: (UUID) -> Void = { _ in }
     var connectCalendar: () -> Void = {}
     var refreshCalendar: () -> Void = {}
     var openParkingLot: () -> Void = {}
@@ -167,7 +172,7 @@ struct NextUpView: View {
     private func nextCard(_ item: PopoverModel.NextItem) -> some View {
         VStack(alignment: .leading, spacing: Theme.Space.m) {
             VStack(alignment: .leading, spacing: Theme.Space.xs) {
-                SectionLabel(item.countdown == nil ? "Next" : "Starting soon")
+                SectionLabel(item.hasStarted ? "Now" : (item.countdown == nil ? "Next" : "Starting soon"))
                 Text(item.title)
                     .font(Theme.Font.title)
                     .foregroundStyle(Theme.text)
@@ -179,7 +184,13 @@ struct NextUpView: View {
 
             // Countdown: exact to the second in the last 20 minutes,
             // otherwise a live "in 2 hr, 10 min".
-            if let countdown = item.countdown {
+            if item.hasStarted {
+                // `.relative` only gives the distance from now, so a time in the
+                // past has to say "ago" itself.
+                (Text("Started ") + Text(item.startTime, style: .relative) + Text(" ago"))
+                    .font(Theme.Font.countdownSmall)
+                    .foregroundStyle(Theme.accent)
+            } else if let countdown = item.countdown {
                 HStack(alignment: .firstTextBaseline, spacing: Theme.Space.s) {
                     Text(countdown).font(Theme.Font.countdown).foregroundStyle(Theme.accent)
                     Text("to go").font(Theme.Font.detail).foregroundStyle(Theme.textSecondary)
@@ -198,6 +209,13 @@ struct NextUpView: View {
 
             if let note = item.leftOffNote, !note.isEmpty {
                 LeftOffNote(note: note)
+            }
+
+            if item.canStartNow {
+                Button { actions.startNow(item.id) } label: {
+                    Text("Start").frame(maxWidth: .infinity)
+                }
+                .buttonStyle(PrimaryButtonStyle())
             }
 
             if item.showHeadsUpActions {

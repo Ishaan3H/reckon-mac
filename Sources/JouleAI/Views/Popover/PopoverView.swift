@@ -51,7 +51,9 @@ struct PopoverView: View {
                 showHeadsUpActions: isLeadUp,
                 saidReady: next.headsUpResponse == .ready,
                 canPush: next.canReschedule,
-                meetingService: next.meetingLink.flatMap(MeetingLink.init(string:))?.service.rawValue
+                meetingService: next.meetingLink.flatMap(MeetingLink.init(string:))?.service.rawValue,
+                hasStarted: next.startTime <= now,
+                canStartNow: coordinator.firingCommitment?.id == next.id
             ))
         } else {
             hero = .nothingCommitted(hasItems: items.contains { $0.endTime > now })
@@ -90,6 +92,7 @@ struct PopoverView: View {
             ready: { coordinator.respond(.ready, to: $0, via: "menu bar") },
             push: { coordinator.respond(.push, to: $0, via: "menu bar") },
             notToday: { coordinator.respond(.notToday, to: $0, via: "menu bar") },
+            startNow: { coordinator.startFiring($0) },
             connectCalendar: {
                 if appState.calendarAccess == .notDetermined {
                     appState.requestCalendarAccess()

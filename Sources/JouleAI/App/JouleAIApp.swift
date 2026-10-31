@@ -68,6 +68,9 @@ private struct MenuBarLabel: View {
     var body: some View {
         if let remaining = coordinator.remainingText {
             Text(remaining).monospacedDigit()
+        } else if coordinator.firingCommitment != nil {
+            // The Start card is up: it's time, nothing left to count down.
+            Text("Start now")
         } else if let untilStart = coordinator.upcomingText {
             // Counting down to the next session, e.g. "in 12:34".
             Text("in \(untilStart)").monospacedDigit()

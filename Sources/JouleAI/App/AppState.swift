@@ -132,7 +132,7 @@ final class AppState {
     /// For each event today:
     /// - if we already have a commitment for that event today, update its title
     ///   and time from the calendar (the calendar is always right about those);
-    /// - otherwise create a new, uncommitted commitment for it. If the same event
+    /// - otherwise create a new commitment for it. If the same event
     ///   appeared on an earlier day (a repeating event), copy its launch targets
     ///   so you don't have to set them up again.
     func refresh() {
@@ -168,7 +168,9 @@ final class AppState {
                     source: .calendar,
                     calendarEventIdentifier: identifier,
                     launchTargets: previous?.launchTargets ?? [],
-                    isCommitted: false,
+                    // New events start committed, unless already under way:
+                    // that one shouldn't take over the screen the moment it appears.
+                    isCommitted: event.startDate > Date(),
                     extraAllowedApps: previous?.extraAllowedApps ?? []
                 ))
                 changed = true
@@ -250,13 +252,14 @@ final class AppState {
         persist()
     }
 
-    /// A blank manual commitment, starting at the next quarter hour.
+    /// A blank manual commitment, already committed, starting at the next quarter hour.
     func newManualCommitment() -> Commitment {
         Commitment(
             title: "",
             startTime: Self.nextQuarterHour(),
             durationMinutes: AppSettings.defaultDurationMinutes,
-            source: .manual
+            source: .manual,
+            isCommitted: true
         )
     }
 

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Connects the popover's drawing (`NextUpView`) to the live app state.
@@ -13,9 +14,11 @@ struct PopoverView: View {
     var body: some View {
         NextUpView(model: model, actions: actions)
             // Refresh every time the popover appears, so the list is never stale.
+            .background(KeepWindowOnScreen())
             .onAppear {
                 appState.refresh()
                 appState.syncCalendar()
+                coordinator.checkNotificationPermission()
                 // A skipped "Where did you leave off?" comes back once, here.
                 coordinator.offerPendingReflection()
             }
@@ -68,7 +71,8 @@ struct PopoverView: View {
 
         return PopoverModel(hero: hero, rows: rows,
                             calendarConnected: appState.calendarAccess == .granted,
-                            calendarRefreshing: appState.isReloadingCalendar)
+                            calendarRefreshing: appState.isReloadingCalendar,
+                            notificationsAllowed: coordinator.notificationsAllowed)
     }
 
     // MARK: - Actions
@@ -102,7 +106,46 @@ struct PopoverView: View {
                 }
             },
             refreshCalendar: { appState.reloadCalendar() },
+            openNotificationSettings: { coordinator.openNotificationSettings() },
             openParkingLot: { coordinator.toggleParkingLot() }
         )
+    }
+}
+
+/// Keeps the popover's window fully on screen. macOS lines it up under the menu
+/// bar icon, which can leave part of it past the screen's right edge when the
+/// icon is far to the right.
+private struct KeepWindowOnScreen: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView { Watcher() }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    private final class Watcher: NSView {
+        private var observers: [NSObjectProtocol] = []
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            observers.forEach(NotificationCenter.default.removeObserver)
+            observers = []
+            guard let window else { return }
+
+            // macOS positions the window after this view joins it, and again
+            // each time it reopens, so re-check whenever it moves or appears.
+            let names: [Notification.Name] = [NSWindow.didMoveNotification, NSWindow.didResizeNotification,
+                                              NSWindow.didBecomeKeyNotification]
+            observers = names.map { name in
+                NotificationCenter.default.addObserver(forName: name, object: window, queue: .main) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.moveOnScreen() }
+                }
+            }
+            DispatchQueue.main.async { self.moveOnScreen() }
+        }
+
+        private func moveOnScreen() {
+            guard let window, let screen = window.screen ?? NSScreen.main else { return }
+            let margin: CGFloat = 8
+            let area = screen.visibleFrame
+            let x = max(area.minX + margin, min(window.frame.minX, area.maxX - window.frame.width - margin))
+            if x != window.frame.minX { window.setFrameOrigin(NSPoint(x: x, y: window.frame.minY)) }
+        }
     }
 }

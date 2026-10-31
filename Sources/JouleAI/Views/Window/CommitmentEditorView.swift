@@ -267,6 +267,11 @@ struct CommitmentEditorView: View {
                 .keyboardShortcut(.cancelAction)
             Button("Save") {
                 draft.title = draft.title.trimmingCharacters(in: .whitespaces)
+                // The list's circle may have changed this since the editor opened.
+                if let saved = appState.commitment(withID: draft.id) {
+                    draft.isCommitted = saved.isCommitted
+                    draft.cancelledAt = saved.cancelledAt
+                }
                 // A committed item whose new time clashes gets the same warning.
                 if draft.isCommitted,
                    !ConflictWarning.confirm(draft, conflicts: appState.conflicts(for: draft)) {

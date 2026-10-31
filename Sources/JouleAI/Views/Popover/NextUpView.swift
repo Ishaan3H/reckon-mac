@@ -47,6 +47,7 @@ struct PopoverModel {
     var rows: [Row]
     var calendarConnected: Bool
     var calendarRefreshing = false
+    var notificationsAllowed = true
 }
 
 /// What the popover's buttons do. The container fills these in.
@@ -60,6 +61,7 @@ struct PopoverActions {
     var startNow: (UUID) -> Void = { _ in }
     var connectCalendar: () -> Void = {}
     var refreshCalendar: () -> Void = {}
+    var openNotificationSettings: () -> Void = {}
     var openParkingLot: () -> Void = {}
 }
 
@@ -86,6 +88,12 @@ struct NextUpView: View {
 
             if !model.calendarConnected {
                 calendarHint
+                    .padding(.horizontal, Theme.Space.xl)
+                    .padding(.top, Theme.Space.l)
+            }
+
+            if !model.notificationsAllowed {
+                notificationsHint
                     .padding(.horizontal, Theme.Space.xl)
                     .padding(.top, Theme.Space.l)
             }
@@ -286,6 +294,18 @@ struct NextUpView: View {
         }
         .padding(.vertical, 7)
         .contentShape(Rectangle())   // the whole row is clickable, not just the text
+    }
+
+    private var notificationsHint: some View {
+        HStack(spacing: Theme.Space.xs) {
+            Image(systemName: "bell.slash")
+            Text("Reminders are off")
+            Spacer()
+            Button("Turn on", action: actions.openNotificationSettings)
+                .buttonStyle(TextButtonStyle(color: Theme.accent))
+        }
+        .font(Theme.Font.detail)
+        .foregroundStyle(Theme.textSecondary)
     }
 
     private var calendarHint: some View {

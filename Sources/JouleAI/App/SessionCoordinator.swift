@@ -42,6 +42,9 @@ final class SessionCoordinator {
     /// True while the Settings "Preview" button is playing brown noise.
     private(set) var isPreviewingNoise = false
 
+    /// False when macOS is blocking JouleAI's notifications.
+    private(set) var notificationsAllowed = true
+
     /// The next committed item still to start today, if any.
     private(set) var upcoming: Commitment?
     /// Seconds until `upcoming` starts (updated every second).
@@ -115,6 +118,7 @@ final class SessionCoordinator {
         notifier.onAction = { [weak self] action, id in
             self?.respond(action, to: id, via: "notification")
         }
+        notifier.onPermissionChecked = { [weak self] allowed in self?.notificationsAllowed = allowed }
         notifier.setUp()
 
         scheduler = Scheduler { [weak self] in self?.tick() }
@@ -149,6 +153,17 @@ final class SessionCoordinator {
     }
 
     // MARK: - 0. Lead-up
+
+    /// Re-checks notification permission (it can change in System Settings).
+    func checkNotificationPermission() {
+        notifier.checkPermission()
+    }
+
+    /// Opens System Settings → Notifications → JouleAI.
+    func openNotificationSettings() {
+        let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension?id=com.jouleai.mac")!
+        NSWorkspace.shared.open(url)
+    }
 
     private func sendLeadUpNotifications() {
         for item in appState.headsUpsDue() {

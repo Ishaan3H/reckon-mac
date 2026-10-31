@@ -20,6 +20,9 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
     /// Called on the main thread when a heads-up button is clicked.
     var onAction: ((Action, UUID) -> Void)?
 
+    /// Called on the main thread with whether macOS allows our notifications.
+    var onPermissionChecked: ((Bool) -> Void)?
+
     private let center = UNUserNotificationCenter.current()
 
     /// Category IDs. A "category" is a named set of buttons a notification can carry.
@@ -47,6 +50,16 @@ final class Notifier: NSObject, UNUserNotificationCenterDelegate {
         center.requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let error { print("JouleAI: notification permission error: \(error)") }
             if !granted { print("JouleAI: notifications not allowed; the menu bar countdown still works") }
+            self.checkPermission()
+        }
+    }
+
+    /// Asks macOS whether notifications are currently allowed. Sending one while
+    /// they're off fails silently, so this is the only way to know.
+    func checkPermission() {
+        center.getNotificationSettings { settings in
+            let allowed = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
+            DispatchQueue.main.async { self.onPermissionChecked?(allowed) }
         }
     }
 

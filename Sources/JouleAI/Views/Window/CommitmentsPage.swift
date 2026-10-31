@@ -68,8 +68,12 @@ struct CommitmentsPage: View {
 
     private func listRow(_ item: Commitment, isSelected: Bool) -> some View {
         HStack(spacing: Theme.Space.m) {
-            Image(systemName: item.isCommitted ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(item.isCommitted ? Theme.accent : Theme.textTertiary)
+            Button { toggleCommit(item) } label: {
+                Image(systemName: item.isCommitted ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(item.isCommitted ? Theme.accent : Theme.textTertiary)
+            }
+            .buttonStyle(.plain)
+            .help(item.isCommitted ? "Committed. Click to uncommit." : "Click to commit")
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.title.isEmpty ? "New commitment" : item.title)
                     .font(Theme.Font.body)
@@ -100,6 +104,16 @@ struct CommitmentsPage: View {
         .background(isSelected ? Theme.accentSoft : Color.clear,
                     in: RoundedRectangle(cornerRadius: Theme.Radius.s, style: .continuous))
         .contentShape(Rectangle())
+    }
+
+    private func toggleCommit(_ item: Commitment) {
+        if item.id == model.newDraft?.id {
+            model.newDraft?.isCommitted.toggle()    // not saved yet
+        } else if item.isCommitted {
+            appState.setCommitted(false, for: item.id)
+        } else if ConflictWarning.confirm(item, conflicts: appState.conflicts(for: item)) {
+            appState.setCommitted(true, for: item.id)
+        }
     }
 
     // MARK: - Detail
